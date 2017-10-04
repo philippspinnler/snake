@@ -1,0 +1,178 @@
+<label>Level:</label> <span id="level"></span>
+<br>
+<canvas id="board" width="400" height="400" tabindex='1'></canvas>
+<script>
+  class Game {
+    constructor(board, boardContext, level) {
+      this.boardContext = boardContext;
+      this.board = board;
+      this.level = level;
+
+      this.DIRECTION_UP = 'up';
+      this.DIRECTION_DOWN = 'down';
+      this.DIRECTION_LEFT = 'left';
+      this.DIRECTION_RIGHT = 'right';
+      this.PIXEL_SIZE = 10;
+
+      this.resetGame();
+
+      this.board.addEventListener('keydown', keyEvent => this.controll(keyEvent));
+    }
+
+    start() {
+      setInterval(() => this.draw(), 1000/15);
+    }
+
+    initSnake() {
+      let snake_part_x = this.snake_x;
+
+      for (let i=0; i < this.snake_length; i++) {
+        this.snake.unshift({x: snake_part_x, y: this.snake_y});
+        snake_part_x -= this.PIXEL_SIZE
+      }
+    }
+
+    resetGame() {
+      this.direction = this.DIRECTION_RIGHT;
+
+      this.snake_x = this.board.height/2;
+      this.snake_y = this.board.width/2;
+
+      this.apple_x = 0;
+      this.apple_y = 0;
+
+      this.snake_length = 5;
+      this.snake = [];
+      this.initSnake();
+      this.randomPlaceApple();
+
+      this.level.innerText = 1;
+    }
+
+    draw() {
+      this.determinateNextStep();
+      this.checkBoundaries();
+      this.checkIfEatsApple();
+      this.checkIfEatsItself();
+
+      this.snake.push({x: this.snake_x, y: this.snake_y})
+      if (this.snake.length > this.snake_length) this.snake.shift();
+
+      this.boardContext.fillStyle = 'black';
+      this.boardContext.fillRect(0, 0, this.board.width, this.board.height);
+
+      this.boardContext.fillStyle = 'white';
+      this.snake.forEach((snake_part) => this.boardContext.fillRect(snake_part.x, snake_part.y, this.PIXEL_SIZE, this.PIXEL_SIZE));
+
+      this.boardContext.fillStyle = 'green';
+      this.boardContext.fillRect(this.apple_x, this.apple_y, this.PIXEL_SIZE, this.PIXEL_SIZE);
+    }
+
+    checkIfEatsApple() {
+      if (this.apple_x == this.snake_x && this.apple_y == this.snake_y) {
+        this.snake_length++;
+        this.level.innerText = parseInt(this.level.innerText) + 1;
+        this.randomPlaceApple();
+      }
+    }
+
+    checkIfEatsItself() {
+      if (this.isOnSnake(this.snake_x, this.snake_y)) {
+        this.resetGame();
+      }
+    }
+
+    isOnSnake(x, y) {
+      let onSnake = false;
+
+      this.snake.forEach((snake_part) => {
+        if (snake_part.x == x && snake_part.y == y) {
+            onSnake = true;
+        }
+      })
+
+      return onSnake;
+    }
+
+    randomPlaceApple() {
+      do {
+        this.apple_x = Math.floor(Math.round(Math.floor(Math.random()*this.board.width) / this.PIXEL_SIZE) * this.PIXEL_SIZE);
+        if (this.apple_x == 0) this.apple_x += this.PIXEL_SIZE;
+        if (this.apple_x == this.board.width) this.apple_x -= this.PIXEL_SIZE;
+        this.apple_y = Math.floor(Math.round(Math.floor(Math.random()*this.board.height) / this.PIXEL_SIZE) * this.PIXEL_SIZE);
+        if (this.apple_y == 0) this.apple_y += this.PIXEL_SIZE;
+        if (this.apple_y == this.board.height) this.apple_y -= this.PIXEL_SIZE;
+      } while(this.isOnSnake(this.apple_x, this.apple_y));
+    }
+
+    checkBoundaries() {
+      if (this.snake_x > this.board.width-this.PIXEL_SIZE) {
+        this.snake_x = 0;
+      }
+
+      if (this.snake_x < 0) {
+        this.snake_x = this.board.width;
+      }
+
+      if (this.snake_y > this.board.height-this.PIXEL_SIZE) {
+        this.snake_y = 0;
+      }
+
+      if (this.snake_y < 0) {
+        this.snake_y = this.board.height;
+      }
+    }
+
+    determinateNextStep() {
+      if (this.direction == this.DIRECTION_UP) {
+        this.snake_x = this.snake_x;
+        this.snake_y = this.snake_y-this.PIXEL_SIZE;
+      }
+
+      if (this.direction == this.DIRECTION_DOWN) {
+        this.snake_x = this.snake_x;
+        this.snake_y = this.snake_y+this.PIXEL_SIZE;
+      }
+
+      if (this.direction == this.DIRECTION_LEFT) {
+        this.snake_x = this.snake_x-this.PIXEL_SIZE;
+        this.snake_y = this.snake_y;
+      }
+
+      if (this.direction == this.DIRECTION_RIGHT) {
+        this.snake_x = this.snake_x+this.PIXEL_SIZE;
+        this.snake_y = this.snake_y;
+      }
+    }
+
+    controll(keyEvent) {
+      switch (keyEvent.key) {
+        case 'ArrowUp':
+          if (this.direction == this.DIRECTION_DOWN) return;
+          this.direction = this.DIRECTION_UP;
+          break;
+        case 'ArrowDown':
+          if (this.direction == this.DIRECTION_UP) return;
+          this.direction = this.DIRECTION_DOWN;
+          break;
+        case 'ArrowLeft':
+          if (this.direction == this.DIRECTION_RIGHT) return;
+          this.direction = this.DIRECTION_LEFT;
+          break;
+        case 'ArrowRight':
+          if (this.direction == this.DIRECTION_LEFT) return;
+          this.direction = this.DIRECTION_RIGHT;
+          break;
+      }
+    }
+  }
+
+  window.onload = function() {
+    let level = document.getElementById('level');
+    let board = document.getElementById('board');
+    let boardContext = board.getContext('2d');
+
+    let game = new Game(board, boardContext, level);
+    game.start();
+  }
+</script>
