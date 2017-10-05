@@ -7,26 +7,31 @@
       this.boardContext = boardContext;
       this.board = board;
       this.level = level;
+      this.readyForInput = true;
 
       this.DIRECTION_UP = 'up';
       this.DIRECTION_DOWN = 'down';
       this.DIRECTION_LEFT = 'left';
       this.DIRECTION_RIGHT = 'right';
+
+      this.KEYCODE_UP = 'ArrowUp';
+      this.KEYCODE_DOWN = 'ArrowDown';
+      this.KEYCODE_LEFT = 'ArrowLeft';
+      this.KEYCODE_RIGHT = 'ArrowRight';
+
       this.PIXEL_SIZE = 10;
 
       this.resetGame();
-
-      this.board.addEventListener('keydown', keyEvent => this.controll(keyEvent));
     }
 
     start() {
-      setInterval(() => this.draw(), 1000/15);
+      setInterval(() => this.draw(), 1000 / 15);
     }
 
     initSnake() {
       let snake_part_x = this.snake_x;
 
-      for (let i=0; i < this.snake_length; i++) {
+      for (let i = 0; i < this.snake_length; i++) {
         this.snake.unshift({x: snake_part_x, y: this.snake_y});
         snake_part_x -= this.PIXEL_SIZE
       }
@@ -35,8 +40,8 @@
     resetGame() {
       this.direction = this.DIRECTION_RIGHT;
 
-      this.snake_x = this.board.height/2;
-      this.snake_y = this.board.width/2;
+      this.snake_x = this.board.height / 2;
+      this.snake_y = this.board.width / 2;
 
       this.apple_x = 0;
       this.apple_y = 0;
@@ -55,7 +60,7 @@
       this.checkIfEatsApple();
       this.checkIfEatsItself();
 
-      this.snake.push({x: this.snake_x, y: this.snake_y})
+      this.snake.push({x: this.snake_x, y: this.snake_y});
       if (this.snake.length > this.snake_length) this.snake.shift();
 
       this.boardContext.fillStyle = 'black';
@@ -65,11 +70,15 @@
       this.snake.forEach((snake_part) => this.boardContext.fillRect(snake_part.x, snake_part.y, this.PIXEL_SIZE, this.PIXEL_SIZE));
 
       this.boardContext.fillStyle = 'green';
-      this.boardContext.fillRect(this.apple_x, this.apple_y, this.PIXEL_SIZE, this.PIXEL_SIZE);
+      this.boardContext.beginPath();
+      this.boardContext.arc(this.apple_x + this.PIXEL_SIZE / 2, this.apple_y + this.PIXEL_SIZE / 2, this.PIXEL_SIZE / 2, 0, 2 * Math.PI);
+      this.boardContext.fill();
+
+      this.readyForInput = true;
     }
 
     checkIfEatsApple() {
-      if (this.apple_x == this.snake_x && this.apple_y == this.snake_y) {
+      if (this.apple_x === this.snake_x && this.apple_y === this.snake_y) {
         this.snake_length++;
         this.level.innerText = parseInt(this.level.innerText) + 1;
         this.randomPlaceApple();
@@ -86,27 +95,28 @@
       let onSnake = false;
 
       this.snake.forEach((snake_part) => {
-        if (snake_part.x == x && snake_part.y == y) {
-            onSnake = true;
+        if (snake_part.x === x && snake_part.y === y) {
+          onSnake = true;
         }
-      })
+      });
 
       return onSnake;
     }
 
     randomPlaceApple() {
       do {
-        this.apple_x = Math.floor(Math.round(Math.floor(Math.random()*this.board.width) / this.PIXEL_SIZE) * this.PIXEL_SIZE);
-        if (this.apple_x == 0) this.apple_x += this.PIXEL_SIZE;
-        if (this.apple_x == this.board.width) this.apple_x -= this.PIXEL_SIZE;
-        this.apple_y = Math.floor(Math.round(Math.floor(Math.random()*this.board.height) / this.PIXEL_SIZE) * this.PIXEL_SIZE);
-        if (this.apple_y == 0) this.apple_y += this.PIXEL_SIZE;
-        if (this.apple_y == this.board.height) this.apple_y -= this.PIXEL_SIZE;
-      } while(this.isOnSnake(this.apple_x, this.apple_y));
+        this.apple_x = Math.floor(Math.round(Math.floor(Math.random() * this.board.width) / this.PIXEL_SIZE) * this.PIXEL_SIZE);
+        if (this.apple_x === 0) this.apple_x += this.PIXEL_SIZE;
+        if (this.apple_x === this.board.width) this.apple_x -= this.PIXEL_SIZE;
+
+        this.apple_y = Math.floor(Math.round(Math.floor(Math.random() * this.board.height) / this.PIXEL_SIZE) * this.PIXEL_SIZE);
+        if (this.apple_y === 0) this.apple_y += this.PIXEL_SIZE;
+        if (this.apple_y === this.board.height) this.apple_y -= this.PIXEL_SIZE;
+      } while (this.isOnSnake(this.apple_x, this.apple_y));
     }
 
     checkBoundaries() {
-      if (this.snake_x > this.board.width-this.PIXEL_SIZE) {
+      if (this.snake_x > this.board.width - this.PIXEL_SIZE) {
         this.snake_x = 0;
       }
 
@@ -114,7 +124,7 @@
         this.snake_x = this.board.width;
       }
 
-      if (this.snake_y > this.board.height-this.PIXEL_SIZE) {
+      if (this.snake_y > this.board.height - this.PIXEL_SIZE) {
         this.snake_y = 0;
       }
 
@@ -124,46 +134,41 @@
     }
 
     determinateNextStep() {
-      if (this.direction == this.DIRECTION_UP) {
-        this.snake_x = this.snake_x;
-        this.snake_y = this.snake_y-this.PIXEL_SIZE;
+      if (this.direction === this.DIRECTION_UP) {
+        this.snake_y = this.snake_y - this.PIXEL_SIZE;
       }
 
-      if (this.direction == this.DIRECTION_DOWN) {
-        this.snake_x = this.snake_x;
-        this.snake_y = this.snake_y+this.PIXEL_SIZE;
+      if (this.direction === this.DIRECTION_DOWN) {
+        this.snake_y = this.snake_y + this.PIXEL_SIZE;
       }
 
-      if (this.direction == this.DIRECTION_LEFT) {
-        this.snake_x = this.snake_x-this.PIXEL_SIZE;
-        this.snake_y = this.snake_y;
+      if (this.direction === this.DIRECTION_LEFT) {
+        this.snake_x = this.snake_x - this.PIXEL_SIZE;
       }
 
-      if (this.direction == this.DIRECTION_RIGHT) {
-        this.snake_x = this.snake_x+this.PIXEL_SIZE;
-        this.snake_y = this.snake_y;
+      if (this.direction === this.DIRECTION_RIGHT) {
+        this.snake_x = this.snake_x + this.PIXEL_SIZE;
       }
     }
 
-    controll(keyEvent) {
-      switch (keyEvent.key) {
-        case 'ArrowUp':
-          if (this.direction == this.DIRECTION_DOWN) return;
-          this.direction = this.DIRECTION_UP;
-          break;
-        case 'ArrowDown':
-          if (this.direction == this.DIRECTION_UP) return;
-          this.direction = this.DIRECTION_DOWN;
-          break;
-        case 'ArrowLeft':
-          if (this.direction == this.DIRECTION_RIGHT) return;
-          this.direction = this.DIRECTION_LEFT;
-          break;
-        case 'ArrowRight':
-          if (this.direction == this.DIRECTION_LEFT) return;
-          this.direction = this.DIRECTION_RIGHT;
-          break;
-      }
+    control(keyEvent) {
+      if (this.oppositeDirection(keyEvent.key)) return;
+
+      if (!this.readyForInput) return;
+      this.readyForInput = false;
+      if (keyEvent.key === this.KEYCODE_UP) this.direction = this.DIRECTION_UP;
+      if (keyEvent.key === this.KEYCODE_DOWN) this.direction = this.DIRECTION_DOWN;
+      if (keyEvent.key === this.KEYCODE_LEFT) this.direction = this.DIRECTION_LEFT;
+      if (keyEvent.key === this.KEYCODE_RIGHT) this.direction = this.DIRECTION_RIGHT;
+    }
+
+    oppositeDirection(desiredDirection) {
+      if (desiredDirection === this.KEYCODE_RIGHT && this.direction === this.DIRECTION_LEFT) return true;
+      if (desiredDirection === this.KEYCODE_LEFT && this.direction === this.DIRECTION_RIGHT) return true;
+      if (desiredDirection === this.KEYCODE_UP && this.direction === this.DIRECTION_DOWN) return true;
+      if (desiredDirection === this.KEYCODE_DOWN && this.direction === this.DIRECTION_UP) return true;
+
+      return false;
     }
   }
 
@@ -173,6 +178,8 @@
     let boardContext = board.getContext('2d');
 
     let game = new Game(board, boardContext, level);
+    window.addEventListener('keydown', keyEvent => game.control(keyEvent));
+
     game.start();
   }
 </script>
